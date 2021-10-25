@@ -1,10 +1,10 @@
-package acao;
+package br.com.sankhya.vsl.acao;
 
 import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava;
 import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.extensions.actionbutton.Registro;
 import br.com.sankhya.modelcore.dwfdata.vo.CabecalhoNotaVO;
-import dao.Nota;
+import br.com.sankhya.vsl.dao.Nota;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;

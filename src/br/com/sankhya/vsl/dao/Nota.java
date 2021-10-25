@@ -1,4 +1,4 @@
-package dao;
+package br.com.sankhya.vsl.dao;
 
 import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.dao.JdbcWrapper;

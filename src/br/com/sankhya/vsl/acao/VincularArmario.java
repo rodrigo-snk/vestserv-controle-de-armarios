@@ -1,11 +1,11 @@
-package acao;
+package br.com.sankhya.vsl.acao;
 
 import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava;
 import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.extensions.actionbutton.Registro;
 import br.com.sankhya.jape.vo.DynamicVO;
-import dao.Armario;
-import dao.Parceiro;
+import br.com.sankhya.vsl.dao.Armario;
+import br.com.sankhya.vsl.dao.Parceiro;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -14,8 +14,8 @@ import java.util.List;
 public class VincularArmario implements AcaoRotinaJava {
     @Override
     public void doAction(ContextoAcao ctx) throws Exception {
-        Object matricula = null;
-        Object codParc = null;
+        Object matricula;
+        Object codParc;
         boolean vinculouArmario = false;
         List<DynamicVO> armariosDisponiveis;
 
@@ -31,10 +31,10 @@ public class VincularArmario implements AcaoRotinaJava {
             // Armários disponíveis para o Parceiro = codParc
             armariosDisponiveis = Armario.armariosDisponiveis(codParc);
 
-            for (DynamicVO armario: armariosDisponiveis) {
-                Object codArm = armario.asBigDecimal("CODARM");
-                Object gaveta = armario.asBigDecimal("GAVETA");
-                codParc = armario.asBigDecimal("CODPARC");
+            for (DynamicVO armarioVO: armariosDisponiveis) {
+                Object codArm = armarioVO.asBigDecimal("CODARM");
+                Object gaveta = armarioVO.asBigDecimal("GAVETA");
+                codParc = armarioVO.asBigDecimal("CODPARC");
 
                 //Timestamp da liberação do armário na hora 00:00:00.0
                 Timestamp dtLib = Armario.dataLiberacao(codArm, gaveta, codParc);

@@ -1,4 +1,4 @@
-package dao;
+package br.com.sankhya.vsl.dao;
 
 import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.core.JapeSession;
@@ -146,7 +146,6 @@ public class Armario {
 
         JdbcWrapper jdbc = null;
         NativeSql sql = null;
-        ResultSet rset = null;
         JapeSession.SessionHandle hnd = null;
 
         try {
@@ -167,9 +166,9 @@ public class Armario {
             sql.setNamedParameter("GAVETA", gaveta);
             sql.setNamedParameter("CODPARC", codParc);
 
-            rset = sql.executeQuery();
+            ResultSet rs = sql.executeQuery();
 
-            if (rset.next()) dtLib = rset.getTimestamp("DTLIB");
+            if (rs.next()) dtLib = rs.getTimestamp("DTLIB");
 
         } catch (Exception e) {
             MGEModelException.throwMe(e);
