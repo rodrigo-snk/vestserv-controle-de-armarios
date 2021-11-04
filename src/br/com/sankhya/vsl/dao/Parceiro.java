@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 
 public class Parceiro {
 
-    public static DynamicVO getParceiro(Object codParc) throws MGEModelException {
+    public static DynamicVO getParceiroByPK(Object codParc) throws MGEModelException {
         DynamicVO parceiroVO = null;
         JapeSession.SessionHandle hnd = null;
         try {
@@ -27,23 +27,18 @@ public class Parceiro {
     }
 
     public static BigDecimal diasReserva(Object codParc) throws MGEModelException {
-        BigDecimal dias = null;
-        JapeSession.SessionHandle hnd = null;
-        try {
-            hnd = JapeSession.open();
-            JapeWrapper empresaDAO = JapeFactory.dao(DynamicEntityNames.PARCEIRO);
-            DynamicVO empresa = empresaDAO.findByPK(codParc);
-            dias = empresa.asBigDecimalOrZero("AD_RSVARM");
-        } catch (Exception e) {
-            MGEModelException.throwMe(e);
-        } finally {
-            JapeSession.close(hnd);
-        }
-
-        return dias;
+        return getParceiroByPK(codParc).asBigDecimalOrZero("AD_RSVARM");
     }
 
     public static String getNomeParc(Object codParc) throws MGEModelException {
-        return getParceiro(codParc).asString("NOMEPARC");
+        return getParceiroByPK(codParc).asString("NOMEPARC");
+    }
+
+    public static boolean utilizaArmarioGaveta(Object codParc) throws MGEModelException {
+        return Parceiro.getParceiroByPK(codParc).asString("AD_UTLARGV").equalsIgnoreCase("S");
+    }
+
+    public static boolean naoControlaArea(Object codParc) throws MGEModelException {
+        return getParceiroByPK(codParc).asString("AD_NCTRLAREA") != null && getParceiroByPK(codParc).asString("AD_NCTRLAREA").equalsIgnoreCase("S");
     }
 }

@@ -1,4 +1,4 @@
-package br.com.sankhya.vsl.acao;
+package br.com.sankhya.vsl.actions;
 
 import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava;
 import br.com.sankhya.extensions.actionbutton.ContextoAcao;
@@ -11,7 +11,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class VincularArmario implements AcaoRotinaJava {
+public class VinculaArmario implements AcaoRotinaJava {
     @Override
     public void doAction(ContextoAcao ctx) throws Exception {
         Object matricula;
@@ -26,7 +26,7 @@ public class VincularArmario implements AcaoRotinaJava {
             codParc = linha.getCampo("CODPARC");
 
             //Verificação se funcionário já possui armário
-            if (Armario.buscaArmario(matricula,codParc) != null) ctx.mostraErro("Funcionário já possui armário.");
+            //if (Armario.getArmarioByPK(matricula,codParc) != null) ctx.mostraErro("Funcionário já possui armário.");
 
             // Armários disponíveis para o Parceiro = codParc
             armariosDisponiveis = Armario.armariosDisponiveis(codParc);
@@ -41,7 +41,7 @@ public class VincularArmario implements AcaoRotinaJava {
 
                 //Se a data de liberação do armário for anterior a data/hora atual, vincula o armário e sai do loop
                 if (dtLib.before(Timestamp.valueOf(LocalDateTime.now()))) {
-                    Armario.atualizarDono(codArm, gaveta, codParc, matricula);
+                    Armario.atualizaDono(codArm, gaveta, codParc, matricula);
                     ctx.setMensagemRetorno("Armario " +codArm.toString()+ " gaveta " +gaveta.toString()+ " Parceiro " +codParc.toString()+ " matricula " +matricula.toString());
                     vinculouArmario = true;
                     break;

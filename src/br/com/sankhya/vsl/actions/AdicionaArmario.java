@@ -1,4 +1,4 @@
-package br.com.sankhya.vsl.acao;
+package br.com.sankhya.vsl.actions;
 
 import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava;
 import br.com.sankhya.extensions.actionbutton.ContextoAcao;
@@ -6,7 +6,7 @@ import br.com.sankhya.extensions.actionbutton.Registro;
 import br.com.sankhya.vsl.dao.Armario;
 import br.com.sankhya.vsl.dao.Parceiro;
 
-public class AdicionarArmario implements AcaoRotinaJava {
+public class AdicionaArmario implements AcaoRotinaJava {
     @Override
     public void doAction(ContextoAcao ctx) throws Exception {
 

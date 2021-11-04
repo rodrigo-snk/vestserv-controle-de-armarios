@@ -1,5 +1,7 @@
 package br.com.sankhya.vsl.dao;
 
+import br.com.sankhya.extensions.actionbutton.ContextoAcao;
+import br.com.sankhya.extensions.actionbutton.Registro;
 import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.core.JapeSession;
 import br.com.sankhya.jape.dao.JdbcWrapper;
@@ -8,18 +10,14 @@ import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.jape.wrapper.JapeFactory;
 import br.com.sankhya.jape.wrapper.JapeWrapper;
 import br.com.sankhya.modelcore.MGEModelException;
-import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 
 import java.sql.ResultSet;
-import java.sql.Time;
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 
 public class Armario {
@@ -34,7 +32,7 @@ public class Armario {
     public static int ultimoArmario(Object codParc) throws MGEModelException {
         JdbcWrapper jdbc = null;
         NativeSql sql = null;
-        ResultSet rset;
+        ResultSet rs;
         JapeSession.SessionHandle hnd = null;
         int ultArmario = 0;
 
@@ -48,24 +46,22 @@ public class Armario {
             sql.appendSql("SELECT NVL(MAX(CODARM),0) ULTARM FROM AD_ARMARIO WHERE CODPARC = :CODPARC");
             sql.setNamedParameter("CODPARC", codParc);
 
-            rset = sql.executeQuery();
-            while (rset.next()) {
-                ultArmario = rset.getInt("ULTARM");
+            rs = sql.executeQuery();
+            if (rs.next()) {
+                ultArmario = rs.getInt("ULTARM");
             }
         }catch (Exception e) {
             MGEModelException.throwMe(e);
         } finally {
-            //JdbcUtils.closeResultSet(rset);
+            //JdbcUtils.closeResultSet(rs);
             NativeSql.releaseResources(sql);
             JdbcWrapper.closeSession(jdbc);
             JapeSession.close(hnd);
         }
-        
         return ultArmario;
-
     }
 
-    public static DynamicVO buscaArmario(Object matricula, Object codParc) throws MGEModelException {
+    public static DynamicVO buscaArmarioPorFuncionario(Object codParc, Object matricula) throws MGEModelException {
 
         DynamicVO armarioVO = null;
         JapeSession.SessionHandle hnd = null;
@@ -93,6 +89,18 @@ public class Armario {
             //Collection<DynamicVO> dynamicVOs = armarioDAO.find("EMUSO = 'N' AND CODPARC = ? ORDER BY CODARM, GAVETA", codParc.toString());
             Collection<DynamicVO> dynamicVOs = armarioDAO.find("EMUSO = 'N' AND CODPARC = ?", codParc);
             armarios.addAll(dynamicVOs);
+            //Orderna os armários por número do armário e número da gaveta em ordem crescente
+            armarios.sort((a1, a2) -> {
+                //Se numero do armario e numero da gaveta forem iguais, retorna 0
+                if (a1.asInt("CODARM") == a1.asInt("CODARM") && a1.asInt("GAVETA") == a2.asInt("GAVETA")) return 0;
+                if (a1.asInt("CODARM") == a2.asInt("CODARM")) {
+                    return Integer.compare(a1.asInt("GAVETA"),a2.asInt("GAVETA"));
+                } else if (a1.asInt("CODARM") < a2.asInt("CODARM")){
+                    return -1;
+                } else {
+                    return 1;
+                }
+            });
         } catch (Exception e) {
             MGEModelException.throwMe(e);
         } finally {
@@ -101,30 +109,25 @@ public class Armario {
         return armarios;
     }
 
-    //Retorna a VO do armario pela PK
-    public static DynamicVO retornaArmario(Object codArm, Object gaveta) throws MGEModelException {
+    public static DynamicVO getArmarioByPK(Object codArm, Object gaveta, Object codParc) throws MGEModelException {
         DynamicVO armarioVO = null;
-
         JapeSession.SessionHandle hnd = null;
         try {
             hnd = JapeSession.open();
             JapeWrapper armarioDAO = JapeFactory.dao("AD_ARMARIO");
-            armarioVO = armarioDAO.findByPK(codArm, gaveta);
+            armarioVO = armarioDAO.findByPK(codArm, gaveta,codParc);
         } catch (Exception e) {
             MGEModelException.throwMe(e);
         } finally {
             JapeSession.close(hnd);
         }
-
         return armarioVO;
     }
-    public static boolean isLiberado(Object codArm, Object gaveta) throws MGEModelException {
-
-        DynamicVO armarioVO = retornaArmario(codArm, gaveta);
-        return armarioVO.asString("EMUSO").equals("S");
+    public static boolean isLiberado(Object codArm, Object gaveta, Object codParc) throws MGEModelException {
+        return getArmarioByPK(codArm, gaveta, codParc).asString("EMUSO").equals("N");
     }
 
-    public static void atualizarDono(Object codArm, Object gaveta, Object codParc, Object matricula) throws MGEModelException {
+    public static void atualizaDono(Object codArm, Object gaveta, Object codParc, Object matricula) throws MGEModelException {
         JapeSession.SessionHandle hnd = null;
         try {
             hnd = JapeSession.open();
@@ -139,6 +142,24 @@ public class Armario {
         } finally {
             JapeSession.close(hnd);
         }
+    }
+
+    public static void liberaArmario(Object codArm, Object gaveta, Object codParc) throws MGEModelException {
+        JapeSession.SessionHandle hnd = null;
+        try {
+            hnd = JapeSession.open();
+            JapeFactory.dao("AD_ARMARIO").
+                    prepareToUpdateByPK(codArm, gaveta, codParc)
+                    .set("MATRICULA", null)
+                    .set("EMUSO", "N")
+                    .set("DTINI", null)
+                    .update();
+        } catch (Exception e) {
+            MGEModelException.throwMe(e);
+        } finally {
+            JapeSession.close(hnd);
+        }
+
     }
 
     public static Timestamp dataLiberacao(Object codArm, Object gaveta, Object codParc) throws MGEModelException {
@@ -173,7 +194,7 @@ public class Armario {
         } catch (Exception e) {
             MGEModelException.throwMe(e);
         } finally {
-            //JdbcUtils.closeResultSet(rset);
+            //JdbcUtils.closeResultSet(rs);
             NativeSql.releaseResources(sql);
             JdbcWrapper.closeSession(jdbc);
             JapeSession.close(hnd);
@@ -184,7 +205,23 @@ public class Armario {
 
         return dtLib;
     }
-    private static void stringToTimestamp(String dateString) {
+
+    public static void geraHistorico(ContextoAcao ctx, Object codArm, Object gaveta, Object codParc, Object motivo, Object devolveuChave) throws Exception {
+        DynamicVO armarioVO = Armario.getArmarioByPK(codArm, gaveta, codParc);
+
+        Registro historico = ctx.novaLinha("AD_HISTORICO_ARMARIO");
+        historico.setCampo("MATRICULA", armarioVO.asBigDecimalOrZero("MATRICULA"));
+        historico.setCampo("CODPARC", armarioVO.asBigDecimalOrZero("CODPARC"));
+        historico.setCampo("CODARM", armarioVO.asBigDecimalOrZero("CODARM"));
+        historico.setCampo("GAVETA", armarioVO.asBigDecimalOrZero("GAVETA"));
+        historico.setCampo("MOTIVO", motivo); // Perda ou Desligamento
+        historico.setCampo("DEVCHAVE", devolveuChave); // Não devolveu chave
+        historico.setCampo("DTINI", armarioVO.asTimestamp("DTINI"));
+        historico.setCampo("DTDEV", Timestamp.valueOf(LocalDateTime.now()));
+        historico.save();
+    }
+
+    /*private static void stringToTimestamp(String dateString) {
         String dateFormatPattern = "yyyy-MM-dd hh:mm:ss.SSS";
         //String dateString = dateString;
         try {
@@ -196,5 +233,5 @@ public class Armario {
             e.printStackTrace();
         }
 
-    }
+    }*/
     }
