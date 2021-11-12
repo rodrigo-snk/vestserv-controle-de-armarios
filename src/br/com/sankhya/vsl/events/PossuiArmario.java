@@ -10,23 +10,36 @@ public class PossuiArmario implements EventoProgramavelJava {
     @Override
     public void beforeInsert(PersistenceEvent persistenceEvent) throws Exception {
         if (persistenceEvent.getModifingFields().isModifing("MATRICULA")) {
-            Object matricula = persistenceEvent.getModifingFields().getOldValue("MATRICULA");
+            Object matricula = persistenceEvent.getModifingFields().getNewValue("MATRICULA");
             Object codParc = persistenceEvent.getModifingFields().getOldValue("CODPARC");
 
             //Verifica se funcionário já possui armário
-           // if (Armario.getArmarioByPK(matricula,codParc) != null) throw new MGEModelException("Funcionário já possui armário.");
+            if (Armario.possuiArmario(codParc,matricula)) throw new MGEModelException("Funcionário já possui armário.");
         }
     }
 
     @Override
     public void beforeUpdate(PersistenceEvent persistenceEvent) throws Exception {
         if (persistenceEvent.getModifingFields().isModifing("MATRICULA")) {
-            Object matricula = persistenceEvent.getModifingFields().getOldValue("MATRICULA");
+            Object matricula = persistenceEvent.getModifingFields().getNewValue("MATRICULA");
+            Object matriculaOld = persistenceEvent.getModifingFields().getOldValue("MATRICULA");
             Object codParc = persistenceEvent.getModifingFields().getOldValue("CODPARC");
 
             //Verifica se funcionário já possui armário
-            //if (Armario.getArmarioByPK(matricula,codParc) != null) throw new MGEModelException("Funcionário já possui armário.");
+            if (matricula != null) {
+                if (Armario.possuiArmario(codParc,matricula)) throw new MGEModelException("Funcionário já possui armário.");
+            }
+            if (matriculaOld != null) throw new MGEModelException("Não é possível alterar matrícula sem desvincular o armário/gaveta.");
+
         }
+
+        /*if (persistenceEvent.getModifingFields().isModifing("EMUSO")) {
+
+            boolean desativando = persistenceEvent.getModifingFields().getNewValue("EMUSO").toString().equalsIgnoreCase("N");
+
+            //if (desativando) throw new MGEModelException("");
+
+        }*/
 
     }
 

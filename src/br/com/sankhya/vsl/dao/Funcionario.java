@@ -5,7 +5,6 @@ import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.jape.wrapper.JapeFactory;
 import br.com.sankhya.jape.wrapper.JapeWrapper;
 import br.com.sankhya.modelcore.MGEModelException;
-import br.com.sankhya.modelcore.util.DynamicEntityNames;
 
 import java.math.BigDecimal;
 
@@ -33,6 +32,14 @@ public class Funcionario {
     public static String getNome(Object codParc, Object matricula) throws MGEModelException {
         return getFuncionarioByPK(codParc, matricula).asString("NOMEFUNC");
     }
+
+    public static Integer getPrefixMatricula(Object codParc, Object matricula) throws MGEModelException {
+        DynamicVO funcionarioVO = getFuncionarioByPK(codParc, matricula);
+        String prefixColMatricula = funcionarioVO.asBigDecimalOrZero("PREFIXCOL").toString()
+                + funcionarioVO.asBigDecimal("MATRICULA").toString();
+        return Integer.valueOf(prefixColMatricula);
+    }
+
 
     public static void inativaFuncionario(Object codParc, Object matricula, Object motivo) throws MGEModelException {
         JapeSession.SessionHandle hnd = null;

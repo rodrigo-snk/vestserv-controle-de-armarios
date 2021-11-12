@@ -16,7 +16,7 @@ public class DesligamentoFuncionario implements EventoProgramavelJava {
     public void beforeUpdate(PersistenceEvent persistenceEvent) throws Exception {
         boolean utilizaArmarioGaveta = Parceiro.utilizaArmarioGaveta(persistenceEvent.getModifingFields().getOldValue("CODPARC"));
         if (persistenceEvent.getModifingFields().isModifing("ATIVO") && utilizaArmarioGaveta) {
-            throw new Exception("Para parceiro que utiliza armário. Inative o funcionário pelo botão.");
+            throw new Exception("Para parceiro que utiliza armário/gaveta, inative o funcionário pelo botão.");
         }
 
     }

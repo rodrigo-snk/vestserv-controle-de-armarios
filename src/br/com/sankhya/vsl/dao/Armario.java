@@ -12,7 +12,9 @@ import br.com.sankhya.jape.wrapper.JapeWrapper;
 import br.com.sankhya.modelcore.MGEModelException;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 
+import java.math.BigDecimal;
 import java.sql.ResultSet;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -77,8 +79,11 @@ public class Armario {
 
         return armarioVO;
     }
+    public static boolean possuiArmario(Object codParc, Object matricula) throws MGEModelException {
+        return buscaArmarioPorFuncionario(codParc, matricula) != null;
+    }
 
-    public static List<DynamicVO> armariosDisponiveis(Object codParc) throws MGEModelException {
+    public static List<DynamicVO> armariosForaDeUso(Object codParc) throws MGEModelException {
 
         List<DynamicVO> armarios = new ArrayList<>();
 
@@ -86,7 +91,6 @@ public class Armario {
         try {
             hnd = JapeSession.open();
             JapeWrapper armarioDAO = JapeFactory.dao("AD_ARMARIO");
-            //Collection<DynamicVO> dynamicVOs = armarioDAO.find("EMUSO = 'N' AND CODPARC = ? ORDER BY CODARM, GAVETA", codParc.toString());
             Collection<DynamicVO> dynamicVOs = armarioDAO.find("EMUSO = 'N' AND CODPARC = ?", codParc);
             armarios.addAll(dynamicVOs);
             //Orderna os armários por número do armário e número da gaveta em ordem crescente
@@ -107,6 +111,20 @@ public class Armario {
             JapeSession.close(hnd);
         }
         return armarios;
+    }
+
+    public static int temArmariosDisponiveis(Object codParc, Timestamp data) throws MGEModelException {
+        List<DynamicVO> armariosForaDeUso = armariosForaDeUso(codParc);
+        int armariosDisponiveis = 0;
+        for (DynamicVO armarioVO: armariosForaDeUso) {
+            //Timestamp da liberação do armário na hora 00:00:00.0
+            Timestamp dtLib = Armario.dataLiberacao(armarioVO.asBigDecimal("CODARM"), armarioVO.asBigDecimal("GAVETA"), codParc);
+
+            if (dtLib.before(Timestamp.valueOf(LocalDateTime.now()))) {
+                armariosDisponiveis++;
+            }
+        }
+        return armariosDisponiveis;
     }
 
     public static DynamicVO getArmarioByPK(Object codArm, Object gaveta, Object codParc) throws MGEModelException {
@@ -210,28 +228,19 @@ public class Armario {
         DynamicVO armarioVO = Armario.getArmarioByPK(codArm, gaveta, codParc);
 
         Registro historico = ctx.novaLinha("AD_HISTORICO_ARMARIO");
-        historico.setCampo("MATRICULA", armarioVO.asBigDecimalOrZero("MATRICULA"));
+        historico.setCampo("MATRICULA", Funcionario.getPrefixMatricula(codParc, armarioVO.asBigDecimalOrZero("MATRICULA")));
         historico.setCampo("CODPARC", armarioVO.asBigDecimalOrZero("CODPARC"));
         historico.setCampo("CODARM", armarioVO.asBigDecimalOrZero("CODARM"));
         historico.setCampo("GAVETA", armarioVO.asBigDecimalOrZero("GAVETA"));
         historico.setCampo("MOTIVO", motivo); // Perda ou Desligamento
         historico.setCampo("DEVCHAVE", devolveuChave); // Não devolveu chave
         historico.setCampo("DTINI", armarioVO.asTimestamp("DTINI"));
-        historico.setCampo("DTDEV", Timestamp.valueOf(LocalDateTime.now()));
+        historico.setCampo("DHHIST", Timestamp.valueOf(LocalDateTime.now()));
+        historico.setCampo("NOMEFUNC", Funcionario.getNome(codParc,armarioVO.asBigDecimalOrZero("MATRICULA")));
+        if (!motivo.toString().equalsIgnoreCase("P")) {
+            historico.setCampo("DTDEV", Timestamp.valueOf(LocalDateTime.now()));
+        }
         historico.save();
     }
 
-    /*private static void stringToTimestamp(String dateString) {
-        String dateFormatPattern = "yyyy-MM-dd hh:mm:ss.SSS";
-        //String dateString = dateString;
-        try {
-            SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormatPattern);
-            Date parsedDate = dateFormat.parse(dateString);
-            Timestamp timestamp = new Timestamp(parsedDate.getTime());
-            System.out.println(timestamp);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }*/
-    }
+}
