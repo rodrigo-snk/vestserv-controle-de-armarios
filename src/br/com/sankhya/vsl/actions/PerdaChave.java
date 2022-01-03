@@ -28,13 +28,15 @@ public class PerdaChave implements AcaoRotinaJava {
     public void doAction(ContextoAcao ctx) throws Exception {
 
         Registro[] linhas = ctx.getLinhas();
-        BigDecimal numNota = BigDecimal.valueOf((Double) ctx.getParam("NUMNOTA"));
+        String numNota = (String) ctx.getParam("NUMNOTA");
         Timestamp dtNeg = (Timestamp) ctx.getParam("DTNEG");
         CabecalhoNotaVO notaVO;
         BigDecimal codParc = null;
         BigDecimal matricula;
         Set<BigDecimal> parceiros = new HashSet<>();
         Set<BigDecimal> matriculas = new HashSet<>();
+
+       // if (true) throw new MGEModelException("BigDecimal NUMNOTA: " +numNota.setScale(0)+ "String NUMNOTA: ");
 
 
         int i = 0;
@@ -61,16 +63,16 @@ public class PerdaChave implements AcaoRotinaJava {
                      codCenCus = BigDecimal.valueOf(90999);
                      matriculas.add(matricula);
                 } else {
-                    codCenCus = Funcionario.getCodCenCus(codParc, matricula);
-                    notaVO = Nota.lancaCabecalhoNota(codParc,codCenCus,numNota, dtNeg);
-                    Collection<ItemNotaVO> itens = new ArrayList<>();
-                    ItemNotaVO itemVO = Nota.montaItemNota(notaVO,BigDecimal.valueOf(8600101), BigDecimal.ONE, matricula, codParc);
-                    itens.add(itemVO);
-                    ItemNotaHelpper.saveItensNota(itens,notaVO);
-                    //Confirma a nota
-                    BarramentoRegra regra = BarramentoRegra.build(CentralFaturamento.class, "regrasConfirmacaoSilenciosa.xml", AuthenticationInfo.getCurrent());
-                    regra.setValidarSilencioso(true);
-                    ConfirmacaoNotaHelper.confirmarNota(notaVO.getNUNOTA(), regra, true);
+                        codCenCus = Funcionario.getCodCenCus(codParc, matricula);
+                        notaVO = Nota.lancaCabecalhoNota(codParc,codCenCus,numNota, dtNeg);
+                        Collection<ItemNotaVO> itens = new ArrayList<>();
+                        ItemNotaVO itemVO = Nota.montaItemNota(notaVO,BigDecimal.valueOf(8600101), BigDecimal.ONE, matricula, codParc);
+                        itens.add(itemVO);
+                        ItemNotaHelpper.saveItensNota(itens,notaVO);
+                        //Confirma a nota
+                        BarramentoRegra regra = BarramentoRegra.build(CentralFaturamento.class, "regrasConfirmacaoSilenciosa.xml", AuthenticationInfo.getCurrent());
+                        regra.setValidarSilencioso(true);
+                        ConfirmacaoNotaHelper.confirmarNota(notaVO.getNUNOTA(), regra, true);
                 }
             }
         }

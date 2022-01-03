@@ -28,14 +28,13 @@ public class AdicionaArmario implements AcaoRotinaJava {
             }
         }
 
-        StringBuffer mensagem = new StringBuffer();
-        mensagem.append("Foram incluídos ");
-        mensagem.append(qtdArmarios);
-        mensagem.append(" armário(s) com ");
-        mensagem.append(qtdGavetas);
-        mensagem.append(" gavetas cada para ");
-        mensagem.append(Parceiro.getNomeParc(codParc));
+        String mensagem = "Foram incluídos " +
+                qtdArmarios +
+                " armário(s) com " +
+                qtdGavetas +
+                " gavetas cada para " +
+                Parceiro.getNomeParc(codParc);
 
-        ctx.setMensagemRetorno(mensagem.toString());
+        ctx.setMensagemRetorno(mensagem);
     }
 }

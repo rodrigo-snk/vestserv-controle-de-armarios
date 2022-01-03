@@ -4,7 +4,6 @@ import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava;
 import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.extensions.actionbutton.Registro;
 import br.com.sankhya.jape.vo.DynamicVO;
-import br.com.sankhya.mgecomercial.model.facades.MatrizAnaliseGiroSP;
 import br.com.sankhya.mgecomercial.model.facades.helpper.ItemNotaHelpper;
 import br.com.sankhya.modelcore.auth.AuthenticationInfo;
 import br.com.sankhya.modelcore.comercial.BarramentoRegra;
@@ -30,9 +29,9 @@ public class DesligaFuncionario implements AcaoRotinaJava {
         Timestamp dtNeg = (Timestamp) contextoAcao.getParam("DTNEG");
         if (dtNeg == null) dtNeg = Timestamp.valueOf(LocalDateTime.now());
 
-        BigDecimal numNota = null;
+        String numNota = "";
         if (contextoAcao.getParam("NUMNOTA") != null) {
-            numNota = BigDecimal.valueOf((Double) contextoAcao.getParam("NUMNOTA")) ;
+            numNota = (String) contextoAcao.getParam("NUMNOTA");
         }
 
         // Verifica se mais de um registro (funcionário) foi selecionada
@@ -57,19 +56,18 @@ public class DesligaFuncionario implements AcaoRotinaJava {
                     Armario.liberaArmario(armarioVO.asBigDecimalOrZero("CODARM"), armarioVO.asBigDecimalOrZero("GAVETA"), armarioVO.asBigDecimalOrZero("CODPARC"));
                     //Se não devolveu chave lança nota de compra
                     if (!devolveuChave) {
-                        // Se Parceiro não controla área (TGFPAR.AD_NCRTLAREA = 'S', então TFGCAB.AD_CODCENCUS = 90999
-                        // Senão, TGFCAB.AD_CODCENCUS = AD_FUNCIONARIO.CODCENCUS
-                        codCenCus = Parceiro.naoControlaArea(codParc) ? BigDecimal.valueOf(90999) : Funcionario.getCodCenCus(codParc, matricula);
-                        CabecalhoNotaVO notaVO = Nota.lancaCabecalhoNota(codParc,codCenCus, numNota, dtNeg);
-                        ItemNotaVO itemVO = Nota.montaItemNota(notaVO,BigDecimal.valueOf(8600101), BigDecimal.ONE, matricula, codParc);
-                        Collection<ItemNotaVO> itens = new ArrayList<>();
-                        itens.add(itemVO);
-                        ItemNotaHelpper.saveItensNota(itens,notaVO);
-
-                        //Confirma a nota
-                        BarramentoRegra regra = BarramentoRegra.build(CentralFaturamento.class, "regrasConfirmacaoSilenciosa.xml", AuthenticationInfo.getCurrent());
-                        regra.setValidarSilencioso(true);
-                        ConfirmacaoNotaHelper.confirmarNota(notaVO.getNUNOTA(), regra, true);
+                            // Se Parceiro não controla área (TGFPAR.AD_NCRTLAREA = 'S', então TFGCAB.AD_CODCENCUS = 90999
+                            // Senão, TGFCAB.AD_CODCENCUS = AD_FUNCIONARIO.CODCENCUS
+                            codCenCus = Parceiro.naoControlaArea(codParc) ? BigDecimal.valueOf(90999) : Funcionario.getCodCenCus(codParc, matricula);
+                            CabecalhoNotaVO notaVO = Nota.lancaCabecalhoNota(codParc,codCenCus, numNota, dtNeg);
+                            ItemNotaVO itemVO = Nota.montaItemNota(notaVO,BigDecimal.valueOf(8600101), BigDecimal.ONE, matricula, codParc);
+                            Collection<ItemNotaVO> itens = new ArrayList<>();
+                            itens.add(itemVO);
+                            ItemNotaHelpper.saveItensNota(itens,notaVO);
+                            //Confirma a nota
+                            BarramentoRegra regra = BarramentoRegra.build(CentralFaturamento.class, "regrasConfirmacaoSilenciosa.xml", AuthenticationInfo.getCurrent());
+                            regra.setValidarSilencioso(true);
+                            ConfirmacaoNotaHelper.confirmarNota(notaVO.getNUNOTA(), regra, true);
                     }
                 }
                 contextoAcao.setMensagemRetorno("Funcionário " +Funcionario.getNome(codParc,matricula) + " ("+Funcionario.getPrefixMatricula(codParc, matricula)+") inativado.");

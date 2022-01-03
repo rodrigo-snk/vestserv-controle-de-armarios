@@ -1,15 +1,14 @@
 package br.com.sankhya.vsl.dao;
 
 import br.com.sankhya.jape.EntityFacade;
-import br.com.sankhya.jape.core.JapeSession;
 import br.com.sankhya.jape.dao.JdbcWrapper;
-import br.com.sankhya.jape.wrapper.JapeFactory;
-import br.com.sankhya.mgecomercial.model.facades.helpper.ItemNotaHelpper;
 import br.com.sankhya.modelcore.MGEModelException;
 import br.com.sankhya.modelcore.dwfdata.vo.CabecalhoNotaVO;
 import br.com.sankhya.modelcore.dwfdata.vo.ItemNotaVO;
-import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
+import br.com.sankhya.util.troubleshooting.SKError;
+import br.com.sankhya.util.troubleshooting.TSLevel;
+import com.sankhya.util.BigDecimalUtil;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -19,7 +18,7 @@ import java.util.Collection;
 
 public class Nota {
 
-    public static CabecalhoNotaVO lancaCabecalhoNota(Object codParc, Object codCenCus, BigDecimal numNota, Timestamp dtNeg) throws Exception {
+    public static CabecalhoNotaVO lancaCabecalhoNota(Object codParc, Object codCenCus, Object numNota, Timestamp dtNeg) throws Exception {
         JdbcWrapper jdbc = null;
         CabecalhoNotaVO notaVO;
 
@@ -33,11 +32,15 @@ public class Nota {
             notaVO.setCODPARC((BigDecimal) codParc);
             notaVO.setCODTIPOPER(BigDecimal.valueOf(600)); // TOP 600
             notaVO.setCODTIPVENDA(BigDecimal.valueOf(16));
-            notaVO.setNUMNOTA(numNota);
+            try {
+                notaVO.setNUMNOTA(BigDecimalUtil.valueOf(numNota.toString()));
+            } catch (Exception e) {
+                throw (IllegalArgumentException) SKError.registry(TSLevel.ERROR, "CORE_E02656", new IllegalArgumentException("Impossível converter o valor: " + numNota + " para um tipo numérico."));
+            }
             if (dtNeg == null) dtNeg = Timestamp.valueOf(LocalDateTime.now());
             notaVO.setDTNEG(dtNeg);
             notaVO.setDTENTSAI(dtNeg);
-            notaVO.setProperty("NUMPEDIDO2", numNota.toString());
+            notaVO.setProperty("NUMPEDIDO2", numNota);
             notaVO.setProperty("AD_CODCENCUS", codCenCus);
 
             /*notaVO.setProperty("AD_CODCENCUS", codCenCus);
